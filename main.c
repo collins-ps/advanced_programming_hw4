@@ -5,7 +5,13 @@
 
 #define k 68
 
-int binarySearch( double arr[], int n,  double target) // referenced https://www.geeksforgeeks.org/find-closest-number-array/
+typedef struct unionizedArr_{
+    double *merged_arr;
+    int **ptr_arr;
+    int length;
+} unionizedArr;
+
+int binarySearch(double arr[], int n, double target) // referenced https://www.geeksforgeeks.org/find-closest-number-array/
 {
     // Corner cases
     if (target <= arr[0])
@@ -112,7 +118,7 @@ int mergeArrays( double arr1[],  double arr2[], int n1, int n2,  double arr3[]){
     return n3;
 }
 
-int mergeKArrays( double **arr, int *arr_sizes, int i, int j,  double *output, int max_len)
+int mergeKArrays(double **arr, int *arr_sizes, int i, int j, double *output, int max_len)
 {
     //if one array is in range
     if(i==j)
@@ -143,10 +149,9 @@ int mergeKArrays( double **arr, int *arr_sizes, int i, int j,  double *output, i
     free(out1);
     free(out2);
     return merged_len_final;
-     
 }
 
-void unionizeArr(double *merged_arr, int merged_length, double **array_set, int *array_sizes, int **p){
+void createPtrArray(double *merged_arr, int merged_length, double **array_set, int *array_sizes, int **p){
     for (int i = 0; i < k; i++){
         p[i] = malloc(sizeof(int) * merged_length);
         for (int j = 0; j < merged_length; j++){
@@ -155,11 +160,28 @@ void unionizeArr(double *merged_arr, int merged_length, double **array_set, int 
     }
 }
 
-void destroyUArray(double *unionized_arr, int ** p){
+unionizedArr *createUArray(double **array_set, int *array_sizes){
+    unionizedArr *arr = malloc(sizeof(unionizedArr));
+    int max_len = 0;
+    for (int i = 0; i < k; i++){
+        max_len += array_sizes[i];
+    }
+    double *unionized_arr = malloc(sizeof(double) * max_len); // memory managed in destroyUArr
+    int merged_length = mergeKArrays(array_set,array_sizes, 0, k-1, unionized_arr, max_len);
+    int **p = malloc(sizeof(int*) *k); // memory managed in destroyUArr
+    createPtrArray(unionized_arr,merged_length,array_set,array_sizes,p);
+    arr->merged_arr = unionized_arr;
+    arr->ptr_arr = p;
+    arr->length = merged_length;
+    return arr;
+}
+
+void destroyUArray(unionizedArr *arr){
     for (int i = 0; i < k; i++)
-        free(p[i]);
-    free(p);
-    free(unionized_arr);
+        free(arr->ptr_arr[i]);
+    free(arr->ptr_arr);
+    free(arr->merged_arr);
+    free(arr);
 }
 
 int checkArr(double *array, int size){
@@ -204,6 +226,16 @@ int main(){
         array_count++;
     }
 
+    double lookup_value = 0.42000009999999999;
+    int results_structure1[k];
+    for (int i = 0; i < k; i++){
+        results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
+    }
+    /*for (int i = 0; i < k; i++){
+        printf("%d ",results_structure1[i]);
+    }
+    printf("\n");*/
+
     /* TEST STRUCTURE 1 */
     /* assert(binarySearch(array_set[0],array_sizes[0],9.99999999999999939E-012) == 0);
     assert(binarySearch(array_set[0],array_sizes[0],9.89999999999999939E-012) == 0);
@@ -227,23 +259,35 @@ int main(){
     assert(binarySearch(array_set[19],array_sizes[19],18.00000000000001) == 11070); // doesn't work with 18.000000000000000 */
 
     /* CREATE STRUCTURE 2 */
-    int max_len = 0;
+    unionizedArr *structure2 = createUArray(array_set,array_sizes);
+    int index_merged_arr = binarySearch(structure2->merged_arr,structure2->length,lookup_value);
+    int results_structure2[k];
+    for (int i = 0; i < k; i++){
+        results_structure2[i] = structure2->ptr_arr[i][index_merged_arr];
+    }
+    for (int i = 0; i < k; i++){
+        assert(results_structure1[i] == results_structure2[i]);
+    }
+
+    /* TEST STRUCTURE 2 */
+    /* assert(checkArr(structure2->merged_arr,structure2->length) == 1);
+    assert(structure2->merged_arr[structure2->length-1] == 150.00000000000000000000);
+    assert(structure2->merged_arr[0] == 9.99999999999999939E-012); */
+
+    // misc mess// 
+    /*int max_len = 0;
     for (int i = 0; i < k; i++){
         max_len += array_sizes[i];
     }
     double *unionized_arr = malloc(sizeof(double) * max_len); // memory managed in destroyUArr
     int merged_length = mergeKArrays(array_set,array_sizes, 0, k-1, unionized_arr, max_len);
     int **p = malloc(sizeof(int*) *k); // memory managed in destroyUArr
-    unionizeArr(unionized_arr,merged_length,array_set,array_sizes,p);
+    unionizeArr(unionized_arr,merged_length,array_set,array_sizes,p); */
 
-    for(int i = 0; i < merged_length; i++){
-        printf("%d ", p[0][i]);
-    }
+    /* for(int i = 0; i < structure2->length; i++){
+        printf("%d ", structure2->ptr_arr[0][i]);
+    } */
     
-    /* TEST STRUCTURE 2 */
-    /*assert(checkArr(unionized_arr,merged_length) == 1);
-    assert(unionized_arr[merged_length-1] == 150.00000000000000000000);
-    assert(unionized_arr[0] == 9.99999999999999939E-012); */
 
     printf("Passed all tests.\n"); 
 
@@ -254,8 +298,7 @@ int main(){
     for (int i = 0; i < k; i++)
         free(array_set[i]);
     
-    //free(unionized_arr);
-    destroyUArray;
+    destroyUArray(structure2);
 
     return 0;
 }

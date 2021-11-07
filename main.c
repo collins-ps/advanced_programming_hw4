@@ -5,7 +5,7 @@
 
 #define k 68
 
-int binarySearch(long double arr[], int n, long double target) // referenced https://www.geeksforgeeks.org/find-closest-number-array/
+int binarySearch( double arr[], int n,  double target) // referenced https://www.geeksforgeeks.org/find-closest-number-array/
 {
     // Corner cases
     if (target <= arr[0])
@@ -21,8 +21,7 @@ int binarySearch(long double arr[], int n, long double target) // referenced htt
         if (arr[mid] == target)
             return mid;
  
-        /* If target is less than array element,
-            then search in left */
+        /* If target is less than array element, then search in left */
         if (target < arr[mid]) {
  
             // If target is greater than previous to mid, return mid
@@ -46,36 +45,51 @@ int binarySearch(long double arr[], int n, long double target) // referenced htt
     return mid; // should this be an error code?
 }
 
-int mergeArrays(long double arr1[], long double arr2[], int n1, int n2, long double arr3[]){ //referenced geekforgeeks
-    int i = 1, j = 1, l = 0, n3 = 0;
+int mergeArrays( double arr1[],  double arr2[], int n1, int n2,  double arr3[]){ //referenced https://www.geeksforgeeks.org/merge-k-sorted-arrays/ 
+    int i = 0, j = 0, l = 0, n3 = 0;
+    double last_insert = -1;
  
     // Traverse both array
     while (i<n1 && j <n2)
     {
         if (arr1[i] < arr2[j]){
-            arr3[l++] = arr1[i++];
-            n3++;
+            if (arr1[i] != last_insert){
+                last_insert = arr1[i];
+                arr3[l++] = arr1[i++];
+                n3++;
+            }
+            else{
+                i++;
+            }
         }
         else if (arr1[i] > arr2[j]){
-            arr3[l++] = arr2[j++];
-            n3++;
+            if (arr2[j] != last_insert){
+                last_insert = arr2[j];
+                arr3[l++] = arr2[j++];
+                n3++;
+            }
+            else{
+                j++;
+            }
         }
         else {
-            arr3[l++] = arr2[j++];
-            i++;
-            n3++;
+            if (arr2[j] != last_insert){
+                last_insert = arr2[j];
+                arr3[l++] = arr2[j++];
+                i++;
+                n3++;
+            }
+            else{
+                i++;
+                j++;
+            }
         }
     }
 
-    /*if (i < n1 && arr3[l-1] == arr1[i])
-        i++;
-    
-    if (j < n2 && arr3[l-1] == arr2[j])
-        j++; */
- 
     // Store remaining elements of first array
     while (i < n1){
-        if (arr3[l-1] != arr1[i]){
+        if (arr1[i] != last_insert){
+            last_insert = arr1[i];
             arr3[l++] = arr1[i++];
             n3++;
         }
@@ -86,7 +100,8 @@ int mergeArrays(long double arr1[], long double arr2[], int n1, int n2, long dou
  
     // Store remaining elements of second array
     while (j < n2){
-        if (arr3[l-1] != arr2[j]){
+        if (arr2[j] != last_insert){
+            last_insert = arr2[j];
             arr3[l++] = arr2[j++];
             n3++;
         }
@@ -94,54 +109,10 @@ int mergeArrays(long double arr1[], long double arr2[], int n1, int n2, long dou
             j++;
         }
     }
-    /*while (j < n2){
-        arr3[l++] = arr2[j++];
-        n3++;
-    }*/
-
     return n3;
 }
 
-/*int mergeKArrays(double **arr, int *array_sizes, int i, int j, double *output){
-    //if one array is in range
-    if(i==j) {
-        for(int p = 0; p < array_sizes[i]; p++)
-            output[p] = arr[i][p];
-        return array_sizes[i];
-    }
-     
-    //if only two arrays are left them merge them
-    if(j-i == 1)
-    {
-        return mergeArrays(arr[i],arr[j],array_sizes[i],array_sizes[j],output);
-        //return;
-    }
-     
-    //output arrays
-    double out1[array_sizes[i]*(((i+j)/2)-i+1)],out2[array_sizes[j]*(j-((i+j)/2))];
-     
-    //divide the array into halves
-    mergeKArrays(arr,array_sizes, i,(i+j)/2,out1);
-    mergeKArrays(arr,array_sizes, (i+j)/2+1,j,out2);
-     
-    //merge the output array
-    mergeArrays(out1,out2,array_sizes[i]*(((i+j)/2)-i+1),array_sizes[j]*(j-((i+j)/2)),output);
-}*/
-
-/* int unionizeArr(double **array_set, int *array_sizes, double *unionized_arr){
-    unionized_arr = array_set[0];
-    int merged_len = array_sizes[0];
-    for (int i = 1; i < 2; i++){ // change to k
-        double arr1[merged_len];
-        for (int j = 0; j < merged_len; j++){
-            arr1[j] = unionized_arr[j];
-        }
-        merged_len = mergeArrays(arr1, array_set[i],merged_len,array_sizes[i],unionized_arr);
-    }
-    return merged_len;
-} */
-
-int mergeKArrays(long double **arr, int *arr_sizes, int i, int j, long double *output, int max_len)
+int mergeKArrays( double **arr, int *arr_sizes, int i, int j,  double *output, int max_len)
 {
     //if one array is in range
     if(i==j)
@@ -158,8 +129,8 @@ int mergeKArrays(long double **arr, int *arr_sizes, int i, int j, long double *o
     }
      
     //output arrays
-    long double *out1 = malloc(sizeof(long double) * max_len);
-    long double *out2 = malloc(sizeof(long double) * max_len);
+    double *out1 = malloc(sizeof(double) * max_len);
+    double *out2 = malloc(sizeof(double) * max_len);
      
     //divide the array into halves
     int out1_len = 0;
@@ -175,22 +146,34 @@ int mergeKArrays(long double **arr, int *arr_sizes, int i, int j, long double *o
      
 }
 
-int checkArr(long double *array, int size){
+void unionizeArr(double *merged_arr, int merged_length, double **array_set, int *array_sizes, int **p){
+    for (int i = 0; i < k; i++){
+        p[i] = malloc(sizeof(int) * merged_length);
+        for (int j = 0; j < merged_length; j++){
+            p[i][j] = binarySearch(array_set[i],array_sizes[i],merged_arr[j]);
+        }
+    }
+}
+
+void destroyUArray(double *unionized_arr, int ** p){
+    for (int i = 0; i < k; i++)
+        free(p[i]);
+    free(p);
+    free(unionized_arr);
+}
+
+int checkArr(double *array, int size){
     for (int i = 0; i < size-1; i++){
         if (array[i] >= array[i+1]){
-            printf("Error - array is not correctly sorted. I is %d, array[i-2] is %Lf, array[i-1] is %Lf, array[i] is %Lf, array[i+1] is %Lf, array[i+2] is %Lf.\n", i,array[i-2],array[i-1],array[i],array[i+1],array[i+2]);
+            printf("Error - array is not correctly sorted.\n"); //. I is %d, array[i-2] is %f, array[i-1] is %Lf, array[i] is %Lf, array[i+1] is %Lf, array[i+2] is %Lf.\n", i,array[i-2],array[i-1],array[i],array[i+1],array[i+2]);
             return 0;
         }
-        /*if (array[i] > array[i+1]){
-            printf("Error - array is not correctly sorted.\n");
-            return 0;
-        }*/
     }
     return 1;
 }
 
 int main(){
-    long double *array_set[k];
+    double *array_set[k];
     int array_sizes[k];
     int array_count = 0;
     FILE *fp;
@@ -202,11 +185,11 @@ int main(){
     if (fp == NULL)
         exit(EXIT_FAILURE); 
 
-    /* create k sorted arrays */
+    /* CREATE STRUCTURE 1 */
     while ((read = getline(&line, &len, fp)) != -1 && array_count < k){
         char* str = strtok(line, " ");
         int length = atoi(str);
-        long double *array = malloc(sizeof(long double) * length);
+        double *array = malloc(sizeof(double) * length);
 
         int i = 0;
         array_sizes[array_count] = length;
@@ -221,37 +204,14 @@ int main(){
         array_count++;
     }
 
-    // structure 2 //
-    int max_len = 0;
-    for (int i = 0; i < k; i++){
-        max_len += array_sizes[i];
-    }
-    // printf("%d\n", max_len);
-    long double *unionized_arr = malloc(sizeof(long double) * max_len);
-    int merged_length = mergeKArrays(array_set,array_sizes, 0, 53, unionized_arr, max_len);
-
-    /*FILE *file_check;
-    file_check = fopen("file_check.txt", "w");
-    for (int i = 0; i < merged_length; i++){
-        // fprintf(file_check, "%Lf ",unionized_arr[i]);
-        printf("%.10Lf ",unionized_arr[i]);
-    }
-    fclose(file_check);*/
-
-    //int merged_length = unionizeArr(array_set,array_sizes,unionized_arr);
-    printf("%d - %d\n", max_len, merged_length);
-    checkArr(unionized_arr,merged_length);
-    //assert(checkArr(unionized_arr,merged_length) == 1);
-
-    /* binary search in k sorted arrays */
-    /*
-    assert(binarySearch(array_set[0],array_sizes[0],9.99999999999999939E-012) == 0);
+    /* TEST STRUCTURE 1 */
+    /* assert(binarySearch(array_set[0],array_sizes[0],9.99999999999999939E-012) == 0);
     assert(binarySearch(array_set[0],array_sizes[0],9.89999999999999939E-012) == 0);
-    assert(binarySearch(array_set[0],array_sizes[0],1.99999999999999939E-012) == 0);
+    assert(binarySearch(array_set[0],array_sizes[0],1.99999999999999939E-012) == 0); 
     assert(binarySearch(array_set[0],array_sizes[0],0) == 0);
     assert(binarySearch(array_set[0],array_sizes[0],30.000000000000000) == 25479);
     assert(binarySearch(array_set[0],array_sizes[0],30.100000000000000) == 25479);
-    assert(binarySearch(array_set[0],array_sizes[0],40.000000000000000) == 25479);
+    assert(binarySearch(array_set[0],array_sizes[0],40.000000000000000) == 25479); 
 
     assert(binarySearch(array_set[67],array_sizes[67],9.99999999999999939E-012) == 0);
     assert(binarySearch(array_set[67],array_sizes[67],9.89999999999999939E-012) == 0);
@@ -264,8 +224,26 @@ int main(){
     assert(binarySearch(array_set[20],array_sizes[20],1.07250000000000005E-011) == 3);
     assert(binarySearch(array_set[20],array_sizes[20],1.21974999999999999E-011) == 8);
     assert(binarySearch(array_set[19],array_sizes[19],19.100000000000000) == 11071);
-    assert(binarySearch(array_set[19],array_sizes[19],18.00000000000001) == 11070); // doesn't work with 18.000000000000000
-    */
+    assert(binarySearch(array_set[19],array_sizes[19],18.00000000000001) == 11070); // doesn't work with 18.000000000000000 */
+
+    /* CREATE STRUCTURE 2 */
+    int max_len = 0;
+    for (int i = 0; i < k; i++){
+        max_len += array_sizes[i];
+    }
+    double *unionized_arr = malloc(sizeof(double) * max_len); // memory managed in destroyUArr
+    int merged_length = mergeKArrays(array_set,array_sizes, 0, k-1, unionized_arr, max_len);
+    int **p = malloc(sizeof(int*) *k); // memory managed in destroyUArr
+    unionizeArr(unionized_arr,merged_length,array_set,array_sizes,p);
+
+    for(int i = 0; i < merged_length; i++){
+        printf("%d ", p[0][i]);
+    }
+    
+    /* TEST STRUCTURE 2 */
+    /*assert(checkArr(unionized_arr,merged_length) == 1);
+    assert(unionized_arr[merged_length-1] == 150.00000000000000000000);
+    assert(unionized_arr[0] == 9.99999999999999939E-012); */
 
     printf("Passed all tests.\n"); 
 
@@ -276,8 +254,8 @@ int main(){
     for (int i = 0; i < k; i++)
         free(array_set[i]);
     
-    free(unionized_arr);
+    //free(unionized_arr);
+    destroyUArray;
 
     return 0;
-
 }

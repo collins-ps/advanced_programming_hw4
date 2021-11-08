@@ -11,6 +11,160 @@ typedef struct unionizedArr_{
     int length;
 } unionizedArr;
 
+typedef struct augmentedArr_{
+    double *aug_arr;
+    int *ptr_arr1;
+    int *ptr_arr2;
+    int length;
+} augmentedArr;
+
+/* helper functions */
+int binarySearch(double arr[], int n, double target);
+int checkArr(double *array, int size);
+
+/* structure 1 */
+void testStructure1(double **array_set, int *array_sizes);
+
+/* structure 2 */
+int mergeArrays( double arr1[],  double arr2[], int n1, int n2,  double arr3[]);
+int mergeKArrays(double **arr, int *arr_sizes, int i, int j, double *output, int max_len);
+void createPtrArray(double *merged_arr, int merged_length, double **array_set, int *array_sizes, int **p);
+unionizedArr *createUArray(double **array_set, int *array_sizes);
+void destroyUArray(unionizedArr *arr);
+int *searchUArray(unionizedArr *arr, double lookup_value);
+void testStructure2(unionizedArr *structure2);
+
+int main(){
+    double *array_set[k];
+    int array_sizes[k];
+    int array_count = 0;
+    FILE *fp;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    fp = fopen("arrays.txt", "r");
+
+    if (fp == NULL)
+        exit(EXIT_FAILURE); 
+
+    /* CREATE STRUCTURE 1 */
+    while ((read = getline(&line, &len, fp)) != -1 && array_count < k){
+        char* str = strtok(line, " ");
+        int length = atoi(str);
+        double *array = malloc(sizeof(double) * length);
+
+        int i = 0;
+        array_sizes[array_count] = length;
+        str = strtok(NULL, " ");
+        while (str != NULL && str[0] != '\n'){ 
+            // array[i] = atof(str);
+            array[i] = strtold(str, NULL);
+            str = strtok(NULL, " ");
+            i++;
+        }
+        array_set[array_count] = array;
+        array_count++;
+    }
+
+    // testStructure1(array_set,array_sizes);
+
+    //double lookup_value = 0.42000009999999999;
+    // double lookup_value = 9.99999999999999939E-012;
+    double lookup_value = 30.000000000000000;
+    int results_structure1[k];
+    for (int i = 0; i < k; i++){
+        results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
+    } 
+
+    /* CREATE STRUCTURE 2 */
+    /*unionizedArr *structure2 = createUArray(array_set,array_sizes);
+    testStructure2(structure2);
+
+    int *results_structure2 = searchUArray(structure2,lookup_value);
+    for (int i = 0; i < k; i++){
+        assert(results_structure1[i] == results_structure2[i]);
+    }*/
+
+    /* CREATE STRUCTURE 3 */
+    augmentedArr *structure3 = malloc(sizeof(augmentedArr) * k); // structure 3 is an array of k aurgmentedArr
+    structure3[k-1].length = array_sizes[k-1];
+    structure3[k-1].aug_arr = malloc(sizeof(double) * structure3[k-1].length);
+    structure3[k-1].ptr_arr1 = malloc(sizeof(int) * structure3[k-1].length);
+    structure3[k-1].ptr_arr2 = malloc(sizeof(int) * structure3[k-1].length);
+    for (int i = 0; i < structure3[k-1].length; i++){
+        structure3[k-1].aug_arr[i] = array_set[k-1][i];
+        structure3[k-1].ptr_arr1[i] = i;
+        structure3[k-1].ptr_arr2[i] = i;
+    }
+    for (int i = k-2; i >= 0; i--){
+        int initial_length = array_sizes[i];
+        double *temp_arr = malloc(sizeof(double) * (structure3[i+1].length/2 + 1));
+        int temp_arr_length = 0;
+        for (int j = 0; j < structure3[i+1].length; j+= 2){
+            temp_arr[temp_arr_length++] = structure3[i+1].aug_arr[j];
+        }
+        structure3[i].aug_arr = malloc(sizeof(double) * (initial_length + temp_arr_length));
+        structure3[i].length = mergeArrays(temp_arr, array_set[i], temp_arr_length, array_sizes[i], structure3[i].aug_arr);
+        free(temp_arr);
+        structure3[i].ptr_arr1 = malloc(sizeof(int) * structure3[i].length);
+        structure3[i].ptr_arr2 = malloc(sizeof(int) * structure3[i].length);
+        for (int j = 0; j < structure3[i].length; j++){
+            structure3[i].ptr_arr1[j] = binarySearch(array_set[i],array_sizes[i],structure3[i].aug_arr[j]);
+            structure3[i].ptr_arr2[j] = binarySearch(structure3[i+1].aug_arr,structure3[i+1].length,structure3[i].aug_arr[j]);
+        }
+    }
+
+    int results_structure3[k];
+    int index = binarySearch(structure3[0].aug_arr,structure3[0].length,lookup_value);
+    results_structure3[0] = structure3[0].ptr_arr1[index];
+    for (int i = 1; i < k; i++){
+        int p2 = structure3[i-1].ptr_arr2[index];
+        if (p2 > 0 && structure3[i].aug_arr[p2-1] >= lookup_value){
+            results_structure3[i] = structure3[i].ptr_arr1[p2-1];
+            index = p2-1;
+            // printf("if statement, %d\n",i);
+        }
+        else {
+            results_structure3[i] = structure3[i].ptr_arr1[p2];
+            index = p2;
+            // printf("else statement, %d\n",i);
+        }
+    }
+    printf("%f\n",structure3[2].aug_arr[structure3[1].ptr_arr2[structure3[1].length-1]]);
+    printf("%d\n",structure3[2].ptr_arr1[structure3[2].length-1]);
+
+    for (int i = 0; i < k; i++){
+        printf("%d - %d \n",results_structure1[i],results_structure3[i]);
+        //assert(results_structure1[i] == results_structure3[i]);
+    }
+
+    /*printf("%d\n", index);
+    printf("%d\n", structure3[0].ptr_arr1[index]);
+    printf("%d\n", structure3[0].ptr_arr2[index]);
+    printf("%f\n", array_set[1][structure3[0].ptr_arr2[index]]); */
+
+    for (int i = 0; i < k; i++){
+        free(structure3[i].ptr_arr1);
+        free(structure3[i].ptr_arr2);
+        free(structure3[i].aug_arr);
+    }
+    //free(ptr_arr);
+    free(structure3);
+
+    fclose(fp);
+    if (line)
+        free(line);
+
+    for (int i = 0; i < k; i++)
+        free(array_set[i]);
+    
+    //destroyUArray(structure2);
+
+    return 0;
+}
+
+
+/* helper functions */
 int binarySearch(double arr[], int n, double target) // referenced https://www.geeksforgeeks.org/find-closest-number-array/
 {
     // Corner cases
@@ -51,6 +205,42 @@ int binarySearch(double arr[], int n, double target) // referenced https://www.g
     return mid; // should this be an error code?
 }
 
+int checkArr(double *array, int size){
+    for (int i = 0; i < size-1; i++){
+        if (array[i] >= array[i+1]){
+            printf("Error - array is not correctly sorted.\n"); //. I is %d, array[i-2] is %f, array[i-1] is %Lf, array[i] is %Lf, array[i+1] is %Lf, array[i+2] is %Lf.\n", i,array[i-2],array[i-1],array[i],array[i+1],array[i+2]);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/* structure 1 */
+void testStructure1(double **array_set, int *array_sizes){
+    assert(binarySearch(array_set[0],array_sizes[0],9.99999999999999939E-012) == 0);
+    assert(binarySearch(array_set[0],array_sizes[0],9.89999999999999939E-012) == 0);
+    assert(binarySearch(array_set[0],array_sizes[0],1.99999999999999939E-012) == 0); 
+    assert(binarySearch(array_set[0],array_sizes[0],0) == 0);
+    assert(binarySearch(array_set[0],array_sizes[0],30.000000000000000) == 25479);
+    assert(binarySearch(array_set[0],array_sizes[0],30.100000000000000) == 25479);
+    assert(binarySearch(array_set[0],array_sizes[0],40.000000000000000) == 25479); 
+
+    assert(binarySearch(array_set[67],array_sizes[67],9.99999999999999939E-012) == 0);
+    assert(binarySearch(array_set[67],array_sizes[67],9.89999999999999939E-012) == 0);
+    assert(binarySearch(array_set[67],array_sizes[67],1.99999999999999939E-012) == 0);
+    assert(binarySearch(array_set[67],array_sizes[67],0) == 0);
+    assert(binarySearch(array_set[67],array_sizes[67],150.00000000000000 ) == 19691);
+    assert(binarySearch(array_set[67],array_sizes[67],200) == 19691);
+    assert(binarySearch(array_set[67],array_sizes[67],300) == 19691);
+
+    assert(binarySearch(array_set[20],array_sizes[20],1.07250000000000005E-011) == 3);
+    assert(binarySearch(array_set[20],array_sizes[20],1.21974999999999999E-011) == 8);
+    assert(binarySearch(array_set[19],array_sizes[19],19.100000000000000) == 11071);
+    assert(binarySearch(array_set[19],array_sizes[19],18.00000000000001) == 11070); // doesn't work with 18.000000000000000 
+    printf("Passed all tests for Structure 1.\n");
+}
+
+/* structure 2 */
 int mergeArrays( double arr1[],  double arr2[], int n1, int n2,  double arr3[]){ //referenced https://www.geeksforgeeks.org/merge-k-sorted-arrays/ 
     int i = 0, j = 0, l = 0, n3 = 0;
     double last_insert = -1;
@@ -184,121 +374,19 @@ void destroyUArray(unionizedArr *arr){
     free(arr);
 }
 
-int checkArr(double *array, int size){
-    for (int i = 0; i < size-1; i++){
-        if (array[i] >= array[i+1]){
-            printf("Error - array is not correctly sorted.\n"); //. I is %d, array[i-2] is %f, array[i-1] is %Lf, array[i] is %Lf, array[i+1] is %Lf, array[i+2] is %Lf.\n", i,array[i-2],array[i-1],array[i],array[i+1],array[i+2]);
-            return 0;
-        }
+int *searchUArray(unionizedArr *arr, double lookup_value){
+    int index_merged_arr = binarySearch(arr->merged_arr,arr->length,lookup_value);
+    //int results = malloc(sizeof(int) * k);
+    static int results[k];
+    for (int i = 0; i < k; i++){
+        results[i] = arr->ptr_arr[i][index_merged_arr];
     }
-    return 1;
+    return results;
 }
 
-int main(){
-    double *array_set[k];
-    int array_sizes[k];
-    int array_count = 0;
-    FILE *fp;
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
-    fp = fopen("arrays.txt", "r");
-
-    if (fp == NULL)
-        exit(EXIT_FAILURE); 
-
-    /* CREATE STRUCTURE 1 */
-    while ((read = getline(&line, &len, fp)) != -1 && array_count < k){
-        char* str = strtok(line, " ");
-        int length = atoi(str);
-        double *array = malloc(sizeof(double) * length);
-
-        int i = 0;
-        array_sizes[array_count] = length;
-        str = strtok(NULL, " ");
-        while (str != NULL && str[0] != '\n'){ 
-            // array[i] = atof(str);
-            array[i] = strtold(str, NULL);
-            str = strtok(NULL, " ");
-            i++;
-        }
-        array_set[array_count] = array;
-        array_count++;
-    }
-
-    double lookup_value = 0.42000009999999999;
-    int results_structure1[k];
-    for (int i = 0; i < k; i++){
-        results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
-    }
-    /*for (int i = 0; i < k; i++){
-        printf("%d ",results_structure1[i]);
-    }
-    printf("\n");*/
-
-    /* TEST STRUCTURE 1 */
-    /* assert(binarySearch(array_set[0],array_sizes[0],9.99999999999999939E-012) == 0);
-    assert(binarySearch(array_set[0],array_sizes[0],9.89999999999999939E-012) == 0);
-    assert(binarySearch(array_set[0],array_sizes[0],1.99999999999999939E-012) == 0); 
-    assert(binarySearch(array_set[0],array_sizes[0],0) == 0);
-    assert(binarySearch(array_set[0],array_sizes[0],30.000000000000000) == 25479);
-    assert(binarySearch(array_set[0],array_sizes[0],30.100000000000000) == 25479);
-    assert(binarySearch(array_set[0],array_sizes[0],40.000000000000000) == 25479); 
-
-    assert(binarySearch(array_set[67],array_sizes[67],9.99999999999999939E-012) == 0);
-    assert(binarySearch(array_set[67],array_sizes[67],9.89999999999999939E-012) == 0);
-    assert(binarySearch(array_set[67],array_sizes[67],1.99999999999999939E-012) == 0);
-    assert(binarySearch(array_set[67],array_sizes[67],0) == 0);
-    assert(binarySearch(array_set[67],array_sizes[67],150.00000000000000 ) == 19691);
-    assert(binarySearch(array_set[67],array_sizes[67],200) == 19691);
-    assert(binarySearch(array_set[67],array_sizes[67],300) == 19691);
-
-    assert(binarySearch(array_set[20],array_sizes[20],1.07250000000000005E-011) == 3);
-    assert(binarySearch(array_set[20],array_sizes[20],1.21974999999999999E-011) == 8);
-    assert(binarySearch(array_set[19],array_sizes[19],19.100000000000000) == 11071);
-    assert(binarySearch(array_set[19],array_sizes[19],18.00000000000001) == 11070); // doesn't work with 18.000000000000000 */
-
-    /* CREATE STRUCTURE 2 */
-    unionizedArr *structure2 = createUArray(array_set,array_sizes);
-    int index_merged_arr = binarySearch(structure2->merged_arr,structure2->length,lookup_value);
-    int results_structure2[k];
-    for (int i = 0; i < k; i++){
-        results_structure2[i] = structure2->ptr_arr[i][index_merged_arr];
-    }
-    for (int i = 0; i < k; i++){
-        assert(results_structure1[i] == results_structure2[i]);
-    }
-
-    /* TEST STRUCTURE 2 */
-    /* assert(checkArr(structure2->merged_arr,structure2->length) == 1);
+void testStructure2(unionizedArr *structure2){
+    assert(checkArr(structure2->merged_arr,structure2->length) == 1);
     assert(structure2->merged_arr[structure2->length-1] == 150.00000000000000000000);
-    assert(structure2->merged_arr[0] == 9.99999999999999939E-012); */
-
-    // misc mess// 
-    /*int max_len = 0;
-    for (int i = 0; i < k; i++){
-        max_len += array_sizes[i];
-    }
-    double *unionized_arr = malloc(sizeof(double) * max_len); // memory managed in destroyUArr
-    int merged_length = mergeKArrays(array_set,array_sizes, 0, k-1, unionized_arr, max_len);
-    int **p = malloc(sizeof(int*) *k); // memory managed in destroyUArr
-    unionizeArr(unionized_arr,merged_length,array_set,array_sizes,p); */
-
-    /* for(int i = 0; i < structure2->length; i++){
-        printf("%d ", structure2->ptr_arr[0][i]);
-    } */
-    
-
-    printf("Passed all tests.\n"); 
-
-    fclose(fp);
-    if (line)
-        free(line);
-
-    for (int i = 0; i < k; i++)
-        free(array_set[i]);
-    
-    destroyUArray(structure2);
-
-    return 0;
+    assert(structure2->merged_arr[0] == 9.99999999999999939E-012);
+    printf("Passed all tests for Structure 2.\n");
 }

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 
 #define k 68
 
@@ -21,6 +22,8 @@ typedef struct augmentedArr_{
 /* helper functions */
 int binarySearch(double arr[], int n, double target);
 int checkArr(double *array, int size);
+int checkResults(int *results, double **array_set, int *array_sizes, double lookup_value);
+int testResults(int num_iters, double **array_set, int *array_sizes);
 
 /* structure 1 */
 void testStructure1(double **array_set, int *array_sizes);
@@ -33,6 +36,7 @@ unionizedArr *createUArray(double **array_set, int *array_sizes);
 void destroyUArray(unionizedArr *arr);
 int *searchUArray(unionizedArr *arr, double lookup_value);
 void testStructure2(unionizedArr *structure2);
+int testResults2(int num_iters, unionizedArr *structure2, double **array_set, int *array_sizes);
 
 int main(){
     double *array_set[k];
@@ -66,24 +70,16 @@ int main(){
         array_count++;
     }
 
-    // testStructure1(array_set,array_sizes);
-
-    //double lookup_value = 0.42000009999999999;
-    // double lookup_value = 9.99999999999999939E-012;
-    double lookup_value = 30.000000000000000;
-    int results_structure1[k];
-    for (int i = 0; i < k; i++){
-        results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
-    } 
+    /* testStructure1(array_set,array_sizes);
+    if (testResults(10000, array_set, array_sizes) == 1)
+        printf("Results are accurate.\n"); */
 
     /* CREATE STRUCTURE 2 */
-    /*unionizedArr *structure2 = createUArray(array_set,array_sizes);
-    testStructure2(structure2);
-
-    int *results_structure2 = searchUArray(structure2,lookup_value);
-    for (int i = 0; i < k; i++){
-        assert(results_structure1[i] == results_structure2[i]);
-    }*/
+    //unionizedArr *structure2 = createUArray(array_set,array_sizes);
+    
+    /*testStructure2(structure2);
+    if (testResults2(1000, structure2, array_set, array_sizes) == 1)
+        printf("Results are accurate.\n"); */
 
     /* CREATE STRUCTURE 3 */
     augmentedArr *structure3 = malloc(sizeof(augmentedArr) * k); // structure 3 is an array of k aurgmentedArr
@@ -94,7 +90,7 @@ int main(){
     for (int i = 0; i < structure3[k-1].length; i++){
         structure3[k-1].aug_arr[i] = array_set[k-1][i];
         structure3[k-1].ptr_arr1[i] = i;
-        structure3[k-1].ptr_arr2[i] = i;
+        structure3[k-1].ptr_arr2[i] = 0;
     }
     for (int i = k-2; i >= 0; i--){
         int initial_length = array_sizes[i];
@@ -114,12 +110,47 @@ int main(){
         }
     }
 
+    double lookup_value = 30;
+
+    int results_structure1[k];
+    for (int i = 0; i < k; i++){
+        results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
+    } 
+
     int results_structure3[k];
+    int index = binarySearch(structure3[0].aug_arr,structure3[0].length,lookup_value); // index = 2
+    for (int i = 0; i < (k-1); i++){
+        results_structure3[i] = structure3[i].ptr_arr1[index]; // results[1] = 2
+        int p2 = structure3[i].ptr_arr2[index]; // p2 = 1
+        if (p2 == 0 || (lookup_value > structure3[i+1].aug_arr[p2-1])){
+            index = p2;
+        }
+        else   
+            index = p2-1;
+    }
+    results_structure3[k-1] = structure3[k-1].ptr_arr1[index];
+    
+
+
+    /*int index = binarySearch(structure3[0].aug_arr,structure3[0].length,q);
+    results_structure3[0] = structure3[0].ptr1[index];
+    int p2 = structure3[0].ptr2[index];
+    if (q > structure3[1].aug_arr[p2-1]){ // q is located at position p2 in M2
+        results_structure3[1] = structure3[1].ptr_arr1[p2];
+        index = p2
+    }
+    else{
+        results_structure3[1] = structure3[1].ptr_arr1[p2-1];
+        index = p2-1;
+    }
+
+
+
     int index = binarySearch(structure3[0].aug_arr,structure3[0].length,lookup_value);
     results_structure3[0] = structure3[0].ptr_arr1[index];
     for (int i = 1; i < k; i++){
         int p2 = structure3[i-1].ptr_arr2[index];
-        if (p2 > 0 && structure3[i].aug_arr[p2-1] >= lookup_value){
+        /*if (p2 > 0 && structure3[i].aug_arr[p2-1] >= lookup_value){
             results_structure3[i] = structure3[i].ptr_arr1[p2-1];
             index = p2-1;
             // printf("if statement, %d\n",i);
@@ -129,14 +160,24 @@ int main(){
             index = p2;
             // printf("else statement, %d\n",i);
         }
-    }
-    printf("%f\n",structure3[2].aug_arr[structure3[1].ptr_arr2[structure3[1].length-1]]);
-    printf("%d\n",structure3[2].ptr_arr1[structure3[2].length-1]);
+        if (structure3[i].aug_arr[p2] < lookup_value){
+            results_structure3[i] = structure3[i].ptr_arr1[p2+1];
+            index = p2+1;
+            // printf("if statement, %d\n",i);
+        }
+        else {
+            results_structure3[i] = structure3[i].ptr_arr1[p2];
+            index = p2;
+            // printf("else statement, %d\n",i);
+        } 
+    } */
+    //printf("%f\n",structure3[2].aug_arr[structure3[1].ptr_arr2[structure3[1].length-1]]);
+    //printf("%d\n",structure3[2].ptr_arr1[structure3[2].length-1]);
 
     for (int i = 0; i < k; i++){
         printf("%d - %d \n",results_structure1[i],results_structure3[i]);
         //assert(results_structure1[i] == results_structure3[i]);
-    }
+    } 
 
     /*printf("%d\n", index);
     printf("%d\n", structure3[0].ptr_arr1[index]);
@@ -148,7 +189,6 @@ int main(){
         free(structure3[i].ptr_arr2);
         free(structure3[i].aug_arr);
     }
-    //free(ptr_arr);
     free(structure3);
 
     fclose(fp);
@@ -238,6 +278,59 @@ void testStructure1(double **array_set, int *array_sizes){
     assert(binarySearch(array_set[19],array_sizes[19],19.100000000000000) == 11071);
     assert(binarySearch(array_set[19],array_sizes[19],18.00000000000001) == 11070); // doesn't work with 18.000000000000000 
     printf("Passed all tests for Structure 1.\n");
+}
+
+int checkResults(int *results, double **array_set, int *array_sizes, double lookup_value){ // helper function for testResults functions
+    for (int i = 0; i < k; i++){
+        int index = results[i];
+        double indexed_value = array_set[i][index];
+        if( (index == array_sizes[i] - 1) || (indexed_value >= lookup_value) )
+            ;
+        else
+            return 0;
+        if (index > 0)
+            if(array_set[i][index-1] < lookup_value)
+                ;
+            else
+                return 0;
+        if (index < (array_sizes[i] - 1))
+            if(array_set[i][index+1] >= lookup_value)
+                ;
+            else
+                return 0;
+    }
+    return 1;
+    //printf("Results are accurate.\n");
+}
+
+int testResults1(int num_iters, double **array_set, int *array_sizes){
+    srand(time(NULL));
+    for (int i = 0; i < num_iters; i++){
+        double lookup_value = ((double) rand() / RAND_MAX) * 150;
+        //printf("%f ", lookup_value);
+        int results_structure1[k];
+        for (int i = 0; i < k; i++){
+            results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
+        } 
+        if(checkResults(results_structure1, array_set, array_sizes, lookup_value) == 0)
+            return 0;
+    }
+    return 1;
+    //printf("Results are accurate.\n");
+}
+
+int testResults2(int num_iters, unionizedArr *structure2, double **array_set, int *array_sizes){
+    srand(time(NULL));
+    for (int i = 0; i < num_iters; i++){
+        double lookup_value = ((double) rand() / RAND_MAX) * 150;
+        int *results_structure2 = searchUArray(structure2,lookup_value);
+        for (int i = 0; i < k; i++){
+            if (checkResults(results_structure2, array_set, array_sizes, lookup_value) == 0)
+                return 0;
+        }
+        free(results_structure2);
+    }
+    return 1;
 }
 
 /* structure 2 */
@@ -376,8 +469,8 @@ void destroyUArray(unionizedArr *arr){
 
 int *searchUArray(unionizedArr *arr, double lookup_value){
     int index_merged_arr = binarySearch(arr->merged_arr,arr->length,lookup_value);
-    //int results = malloc(sizeof(int) * k);
-    static int results[k];
+    int *results = malloc(sizeof(int) * k);
+    //static int results[k];
     for (int i = 0; i < k; i++){
         results[i] = arr->ptr_arr[i][index_merged_arr];
     }

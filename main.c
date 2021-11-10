@@ -23,9 +23,6 @@ typedef struct augmentedArr_{
 typedef struct hashArr_{
     double min;
     double max;
-    // double global_min;
-    // double global_max;
-    // double increment;
     int *b1;
     int *b2;
 } hashArr;
@@ -101,7 +98,7 @@ int main(){
 
     /* CREATE STRUCTURE 3 */
     
-    /*augmentedArr *structure3 = malloc(sizeof(augmentedArr) * k); // structure 3 is an array of k aurgmentedArr
+    augmentedArr *structure3 = malloc(sizeof(augmentedArr) * k); // structure 3 is an array of k aurgmentedArr
     structure3[k-1].length = array_sizes[k-1];
     structure3[k-1].aug_arr = malloc(sizeof(double) * structure3[k-1].length);
     structure3[k-1].ptr_arr1 = malloc(sizeof(int) * structure3[k-1].length);
@@ -116,7 +113,8 @@ int main(){
         double *temp_arr = malloc(sizeof(double) * (structure3[i+1].length/2 + 1));
         int temp_arr_length = 0;
         for (int j = 0; j < structure3[i+1].length; j+= 2){
-            temp_arr[temp_arr_length++] = structure3[i+1].aug_arr[j];
+            temp_arr[temp_arr_length] = structure3[i+1].aug_arr[j];
+            temp_arr_length++;
         }
         structure3[i].aug_arr = malloc(sizeof(double) * (initial_length + temp_arr_length));
         structure3[i].length = mergeArrays(temp_arr, array_set[i], temp_arr_length, array_sizes[i], structure3[i].aug_arr);
@@ -125,141 +123,99 @@ int main(){
         structure3[i].ptr_arr2 = malloc(sizeof(int) * structure3[i].length);
         for (int j = 0; j < structure3[i].length; j++){
             structure3[i].ptr_arr1[j] = binarySearch(array_set[i],array_sizes[i],structure3[i].aug_arr[j]);
-            structure3[i].ptr_arr2[j] = binarySearch(structure3[i+1].aug_arr,structure3[i+1].length,structure3[i].aug_arr[j]);
+            structure3[i].ptr_arr2[j] = binarySearch(structure3[i+1].aug_arr,structure3[i+1].length,structure3[i].aug_arr[j]); // account for p2 = -1 if lookupvalue is 150
+            // if (structure3[i].ptr_arr2[j] == -1)
+            //     printf("p2 is -1\n");
         }
-    } */
+    } 
+    // for (int i = 0; i < k; i++){
+    //     printf("%f \n", structure3[i].aug_arr[structure3[i].length - 1]);
+    // }
+    
 
-    /*double lookup_value = 0; 
+    double lookup_value = 32; 
     int results_structure1[k];
     for (int i = 0; i < k; i++){
         results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
-    } */
+    } 
 
-    /*
     int results_structure3[k];
-    int index = binarySearch(structure3[0].aug_arr,structure3[0].length,lookup_value); // index = 2
+    int index = binarySearch(structure3[0].aug_arr,structure3[0].length,lookup_value); 
+    
     for (int i = 0; i < (k-1); i++){
-        int p2 = structure3[i].ptr_arr2[index];
-        if (p2 > structure3[i+1].length){
-            results_structure3[i] = (structure3[i+1].length)-1;
-            //index = (structure3[i+1].length)-1;
+        printf("index: %d\n", index);
+        printf("max of aug array %d: %f\n", i, structure3[i].aug_arr[structure3[i].length - 1]);
+        int p1, p2;
+        if(index == -1){
+            p1 = -1;
+            // results_structure3[i] = -1;
+            //index = structure3[i].length - 1;
+            index = structure3[i+1].length - 1;
+            p2 = index;
+            printf("continue - i - %d \n %d\n, %f - %f \n ",i,index,structure3[i+1].aug_arr[index],structure3[i+1].aug_arr[index-1]);
+            // continue;
         }
-        else
-            results_structure3[i] = structure3[i].ptr_arr1[index];
-        if (p2 == 0 || (lookup_value > structure3[i+1].aug_arr[p2-1])){ // (p2 < structure3[i+1].length &&  (lookup_value > structure3[i+1].aug_arr[p2-1]))){
-            index = p2;
+        else{
+            p1 = structure3[i].ptr_arr1[index];
+            p2 = structure3[i].ptr_arr2[index];
         }
-        else   
-            index = p2-1;
+        // printf("%d\n",p1);
+        // p1 = structure3[i].ptr_arr1[index]; // added 
+        // p2 = index; //structure3[i].ptr_arr2[index];
+
+        // if(p2 == -1){
+        //     p2 = structure3[i+1].length - 1;
+        // }
+        printf("i - %d \n %d\n, %f - %f \n ",i,p2,structure3[i+1].aug_arr[p2],structure3[i+1].aug_arr[p2-1]);
+        
+        printf("max of next aug array %d: %f\n", (i+1), structure3[i+1].aug_arr[structure3[i+1].length - 1]);
+        
+        // if(p1 == -1 || array_set[i][p1] >= lookup_value)
+        //     results_structure3[i] = p1; // could be -1
+        // else
+        results_structure3[i] = p1;
+
+        if ( p2 == 0 || (lookup_value <= structure3[i+1].aug_arr[p2] && p2 < structure3[i+1].length && lookup_value > structure3[i+1].aug_arr[p2-1]))
+            ;
+        else if (lookup_value <= structure3[i+1].aug_arr[p2-1])
+            p2--;
+        else if (lookup_value > structure3[i+1].aug_arr[structure3[i+1].length - 1])
+            p2 = -1;
+        else{
+            //printf("i - %d \n %d\n, %f - %f \n ",i,p2,structure3[i+1].aug_arr[structure3[i+1].length - 1],structure3[i+1].aug_arr[structure3[i+1].length - 2]);
+            assert(0);
+        }
+        index = p2; 
+
+        printf("i - %d \n %d\n, %f - %f \n ",i,p2,structure3[i+1].aug_arr[p2],structure3[i+1].aug_arr[p2-1]);
+        // if (index == -1){
+        //     printf("index = -1 for array %d\n",i);
+        // }
+        // else if (index == 0)
+        //     printf("index = 0 for array %d\n",i);
     }
-    results_structure3[k-1] = structure3[k-1].ptr_arr1[index];
+    results_structure3[k-1] = structure3[k-1].ptr_arr1[index]; // needs fixing
 
     for (int i = 0; i < k; i++){
-        printf("%d - %d \n",results_structure1[i],results_structure3[i]);
-        //assert(results_structure1[i] == results_structure3[i]);
+        //printf("i is %d: %d - %d \n",i, results_structure1[i],results_structure3[i]);
+        assert(results_structure1[i] == results_structure3[i]);
     } 
-    printf("Passed all tests."); */
+    printf("Passed all tests.\n"); 
 
-
-    //printf("%f ",array_set[33][2723]);
-    //printf("%f\n",array_set[33][2637]);
-
-    /*printf("%f ",array_set[k-1][19558]);
-    printf("%f ",array_set[k-1][19549]);
-    printf("%f\n",array_set[k-1][19550]);
-
-    printf("%f ",array_set[3][157751]);
-    printf("%f \n",array_set[3][157753]);
-
-    printf("%f ",array_set[4][41034]);*/
-
-    /*int index = binarySearch(structure3[0].aug_arr,structure3[0].length,q);
-    results_structure3[0] = structure3[0].ptr1[index];
-    int p2 = structure3[0].ptr2[index];
-    if (q > structure3[1].aug_arr[p2-1]){ // q is located at position p2 in M2
-        results_structure3[1] = structure3[1].ptr_arr1[p2];
-        index = p2
-    }
-    else{
-        results_structure3[1] = structure3[1].ptr_arr1[p2-1];
-        index = p2-1;
-    }
-
-    int index = binarySearch(structure3[0].aug_arr,structure3[0].length,lookup_value);
-    results_structure3[0] = structure3[0].ptr_arr1[index];
-    for (int i = 1; i < k; i++){
-        int p2 = structure3[i-1].ptr_arr2[index];
-        /*if (p2 > 0 && structure3[i].aug_arr[p2-1] >= lookup_value){
-            results_structure3[i] = structure3[i].ptr_arr1[p2-1];
-            index = p2-1;
-            // printf("if statement, %d\n",i);
-        }
-        else {
-            results_structure3[i] = structure3[i].ptr_arr1[p2];
-            index = p2;
-            // printf("else statement, %d\n",i);
-        }
-        if (structure3[i].aug_arr[p2] < lookup_value){
-            results_structure3[i] = structure3[i].ptr_arr1[p2+1];
-            index = p2+1;
-            // printf("if statement, %d\n",i);
-        }
-        else {
-            results_structure3[i] = structure3[i].ptr_arr1[p2];
-            index = p2;
-            // printf("else statement, %d\n",i);
-        } 
-    } */
-    //printf("%f\n",structure3[2].aug_arr[structure3[1].ptr_arr2[structure3[1].length-1]]);
-    //printf("%d\n",structure3[2].ptr_arr1[structure3[2].length-1]);
-
-    /*printf("%d\n", index);
-    printf("%d\n", structure3[0].ptr_arr1[index]);
-    printf("%d\n", structure3[0].ptr_arr2[index]);
-    printf("%f\n", array_set[1][structure3[0].ptr_arr2[index]]); */
-
-    /*for (int i = 0; i < k; i++){
+    for (int i = 0; i < k; i++){
         free(structure3[i].ptr_arr1);
         free(structure3[i].ptr_arr2);
         free(structure3[i].aug_arr);
     }
-    free(structure3); */
+    free(structure3); 
 
     /* CREATE STUCTURE 4 */
-    hashArr *structure4 = createHArray(array_set,array_sizes);
+    //hashArr *structure4 = createHArray(array_set,array_sizes);
+
     /*if (testStructure4(structure4, array_set,array_sizes) == 1)
-        printf("Passed all tests.\n");*/
-
-    if (testResults4(1, structure4, array_set, array_sizes) == 1)
-        printf("Results are accurate.\n"); 
-
-    //double lookup_value = -0.1;
-    
-    /*if (lookup_value > structure4[m-1].max || lookup_value < structure4[0].min)
-        printf("Error - look up value is out of bounds.\n");
-    double increment = structure4[0].max - structure4[0].min;
-    int bin = (int)lookup_value/increment; // lower bound is inclusive, upper bound is not inclusive -- need check for global max
-    if (bin == m) // to include global max in last bin
-        bin = m - 1;
-    
-    int *results_structure4 = malloc(sizeof(int) * k);
-    for (int i = 0; i < k; i++){
-        if ( (lookup_value < array_set[i][0]) || (lookup_value > array_set[i][array_sizes[i]-1]) )
-            results_structure4[i] = -1;
-        else{
-            int j = structure4[bin].min;
-            while(lookup_value > array_set[i][j]) // && j < structure4[bin].max)
-                j++;
-            results_structure4[i] = j;
-        }
-    }
-
-    for (int i = 0; i < k; i++){
-        //printf("%d - %d \n",results_structure1[i],results_structure4[i]);
-        assert(results_structure1[i] == results_structure4[i]);
-    } 
-    printf("Passed all tests.\n");
-    free(results_structure4); */
+        printf("Passed all tests.\n"); 
+    if (testResults4(100, structure4, array_set, array_sizes) == 1)
+        printf("Results are accurate.\n"); */
 
     /* free memory */
     fclose(fp);
@@ -270,52 +226,10 @@ int main(){
         free(array_set[i]);
     
     //destroyUArray(structure2);
-    destroyHArray(structure4);
+    //destroyHArray(structure4);
 
     return 0;
 }
-
-
-/* helper functions */
-/*int binarySearch(double arr[], int n, double target) // referenced https://www.geeksforgeeks.org/find-closest-number-array/
-{
-    // Corner cases
-    if (target <= arr[0])
-        return 0;
-    if (target >= arr[n - 1])
-        return n - 1;
- 
-    // Doing binary search
-    int i = 0, j = n, mid = 0;
-    while (i < j) {
-        mid = (i + j) / 2;
- 
-        if (arr[mid] == target)
-            return mid;
- 
-        // If target is less than array element, then search in left 
-        if (target < arr[mid]) {
- 
-            // If target is greater than previous to mid, return mid
-            if (mid > 0 && target > arr[mid - 1])
-                return mid;
- 
-            // Repeat for left half 
-            j = mid;
-        }
- 
-        // If target is greater than mid
-        else {
-            if (mid < (n - 1) && target < arr[mid + 1])
-                return mid + 1;
-            // update i
-            i = mid + 1;
-        }
-    }
- 
-    // Only single element left after search
-    return mid; // should this be an error code?
-} */
 
 int binarySearch(double arr[], int n, double target) // referenced https://www.geeksforgeeks.org/find-closest-number-array/
 {
@@ -395,25 +309,6 @@ void testStructure1(double **array_set, int *array_sizes){
 }
 
 int checkResults(int *results, double **array_set, int *array_sizes, double lookup_value){ // helper function for testResults functions
-    /*for (int i = 0; i < k; i++){
-        int index = results[i];
-        double indexed_value = array_set[i][index];
-        if( (index == array_sizes[i] - 1) || (indexed_value >= lookup_value) )
-            ;
-        else
-            return 0;
-        if (index > 0)
-            if(array_set[i][index-1] < lookup_value)
-                ;
-            else
-                return 0;
-        if (index < (array_sizes[i] - 1))
-            if(array_set[i][index+1] >= lookup_value)
-                ;
-            else
-                return 0;
-    }
-    return 1;*/
     for (int i = 0; i < k; i++){
         if( ((lookup_value > array_set[i][array_sizes[i]-1]) || (lookup_value < array_set[i][0])))
             if(results[i] == -1)
@@ -434,7 +329,6 @@ int checkResults(int *results, double **array_set, int *array_sizes, double look
                 return 0;
     }
     return 1;
-    //printf("Results are accurate.\n");
 }
 
 int testResults1(int num_iters, double **array_set, int *array_sizes){
@@ -604,7 +498,6 @@ void destroyUArray(unionizedArr *arr){
 int *searchUArray(unionizedArr *arr, double lookup_value){
     int index_merged_arr = binarySearch(arr->merged_arr,arr->length,lookup_value);
     int *results = malloc(sizeof(int) * k);
-    //static int results[k];
     for (int i = 0; i < k; i++){
         results[i] = arr->ptr_arr[i][index_merged_arr];
     }

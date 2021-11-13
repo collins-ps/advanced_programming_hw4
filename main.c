@@ -3,9 +3,10 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
+#include "timer.h"
 
 #define k 68
-#define m 10
+#define m 10 // number of bins for hash structure
 
 typedef struct unionizedArr_{
     double *merged_arr;
@@ -58,6 +59,8 @@ int testResults2(int num_iters, unionizedArr *structure2, double **array_set, in
 int testResults3(int num_iters, augmentedArr *structure3, double **array_set, int *array_sizes);
 int testResults4(int num_iters, hashArr *structure4, double **array_set, int *array_sizes);
 
+void lookup_kernel(int num_iters, double **array_set, int *array_sizes, unionizedArr *structure2, augmentedArr *structure3, hashArr *structure4);
+
 int main(){
     double *array_set[k];
     int array_sizes[k];
@@ -90,27 +93,45 @@ int main(){
         array_count++;
     }
 
+    /* CREATE STRUCTURE 2 */
+    unionizedArr *structure2 = createUArray(array_set,array_sizes);
+    
+    /* CREATE STRUCTURE 3 */
+    augmentedArr *structure3 = createAArray(array_set,array_sizes);
+
+    /* CREATE STUCTURE 4 */
+    hashArr *structure4 = createHArray(array_set,array_sizes);
+
+    lookup_kernel(2, array_set, array_sizes, structure2, structure3, structure4);
+
+    /* free memory */
+    fclose(fp);
+    if (line)
+        free(line);
+
+    
+
+    for (int i = 0; i < k; i++)
+        free(array_set[i]);
+
+    destroyUArray(structure2);
+    destroyAArray(structure3);
+    destroyHArray(structure4);
+
+    return 0;
+
         /* tests for Structure 1 */
     /*if (testResults1(10000, array_set, array_sizes) == 1)
         printf("Results are accurate.\n"); */
-
-    /* CREATE STRUCTURE 2 */
-    //unionizedArr *structure2 = createUArray(array_set,array_sizes);
-    
+        
         /* tests for Structure 2 */
     /*testStructure2(structure2);
     if (testResults2(1000, structure2, array_set, array_sizes) == 1)
         printf("Results are accurate.\n"); */
 
-    /* CREATE STRUCTURE 3 */
-    //augmentedArr *structure3 = createAArray(array_set,array_sizes);
-
         /* tests for Structure 3 */
     /*if (testResults3(10000, structure3, array_set, array_sizes) == 1)
         printf("Results are accurate.\n"); */
-
-    /* CREATE STUCTURE 4 */
-    // hashArr *structure4 = createHArray(array_set,array_sizes);
 
         /* tests for Structure 4 */
     /*if (testStructure4(structure4, array_set,array_sizes) == 1)
@@ -118,19 +139,6 @@ int main(){
     if (testResults4(100, structure4, array_set, array_sizes) == 1)
         printf("Results are accurate.\n"); */
 
-    /* free memory */
-    fclose(fp);
-    if (line)
-        free(line);
-
-    // destroyUArray(structure2);
-    // destroyAArray(structure3);
-    // destroyHArray(structure4);
-
-    for (int i = 0; i < k; i++)
-        free(array_set[i]);
-
-    return 0;
 }
 
 /* helper functions */
@@ -608,4 +616,73 @@ int testResults4(int num_iters, hashArr *structure4, double **array_set, int *ar
         free(results_structure4);
     }
     return 1;
+}
+
+void lookup_kernel(int num_iters, double **array_set, int *array_sizes, unionizedArr *structure2, augmentedArr *structure3, hashArr *structure4){
+    srand(time(NULL));
+
+    double totalTime1  = 0.0;
+    double totalTime2  = 0.0;
+    double totalTime3  = 0.0;
+    double totalTime4  = 0.0;
+
+    FILE *datafile    = NULL; 
+    datafile          = fopen("results.txt","w");
+
+    for (int iter = 1; iter <= num_iters; iter++){
+        double lookup_value = ((double) rand() / RAND_MAX) * 150;
+        // fprintf(datafile,"Iteration: %d, Lookup value: %d\n", i, lookup_value);
+        printf("Iteration: %d, Lookup value: %f\n", iter, lookup_value);
+
+        
+        int results_structure1[k];
+        StartTimer();
+        for (int i = 0; i < k; i++){
+            results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
+        } 
+        const double tElapsed1 = GetTimer() / 1000.0;
+        if (iter > 1) {                          /* First iter is warm up */
+            totalTime1 += tElapsed1; 
+        }
+
+        StartTimer();
+        int *results_structure2 = searchUArray(structure2,lookup_value);
+        const double tElapsed2 = GetTimer() / 1000.0;
+        if (iter > 1) {                          /* First iter is warm up */
+            totalTime2 += tElapsed2; 
+        }
+
+        StartTimer();
+        int *results_structure3 = searchAArray(structure3,lookup_value);
+        const double tElapsed3 = GetTimer() / 1000.0;
+        if (iter > 1) {                          /* First iter is warm up */
+            totalTime3 += tElapsed3; 
+        }
+
+        StartTimer();
+        int *results_structure4 = searchHArray(structure4,lookup_value, array_set,array_sizes);
+        const double tElapsed4 = GetTimer() / 1000.0;
+        if (iter > 1) {                          /* First iter is warm up */
+            totalTime4 += tElapsed4; 
+        }
+
+        for (int i = 0; i < k; i++){
+            assert(checkResults(results_structure1, array_set, array_sizes, lookup_value) == 1);
+            assert(checkResults(results_structure2, array_set, array_sizes, lookup_value) == 1);
+            assert(checkResults(results_structure3, array_set, array_sizes, lookup_value) == 1);
+            assert(checkResults(results_structure4, array_set, array_sizes, lookup_value) == 1);
+        }
+        printf("All results are accurate for iteration %d.\n",iter);
+        free(results_structure2);
+        free(results_structure3);
+        free(results_structure4);
+    }
+    
+    double avgTime1 = totalTime1 / (double)(num_iters-1);
+    double avgTime2 = totalTime2 / (double)(num_iters-1);
+    double avgTime3 = totalTime3 / (double)(num_iters-1);
+    double avgTime4 = totalTime4 / (double)(num_iters-1); 
+    fprintf(datafile, "Number of iterations: %d\nStructure 1 - avgTime: %f   totTime: %f \nStructure 2 - avgTime: %f   totTime: %f \nStructure 3 - avgTime: %f   totTime: %f \nStructure 4 (%d bins) - avgTime: %f   totTime: %f \n", num_iters, avgTime1, totalTime1, avgTime2, totalTime2, avgTime3, totalTime3, m, avgTime4, totalTime4);
+    fclose(datafile);
+
 }

@@ -31,10 +31,6 @@ typedef struct hashArr_{
 int binarySearch(double arr[], int n, double target);
 int checkArr(double *array, int size);
 int checkResults(int *results, double **array_set, int *array_sizes, double lookup_value);
-int testResults(int num_iters, double **array_set, int *array_sizes);
-
-/* structure 1 */
-void testStructure1(double **array_set, int *array_sizes);
 
 /* structure 2 */
 int mergeArrays( double arr1[],  double arr2[], int n1, int n2,  double arr3[]);
@@ -44,13 +40,22 @@ unionizedArr *createUArray(double **array_set, int *array_sizes);
 void destroyUArray(unionizedArr *arr);
 int *searchUArray(unionizedArr *arr, double lookup_value);
 void testStructure2(unionizedArr *structure2);
-int testResults2(int num_iters, unionizedArr *structure2, double **array_set, int *array_sizes);
+
+/* structure 3 */
+augmentedArr *createAArray(double **array_set, int *array_sizes);
+int *searchAArray(augmentedArr *structure3, double lookup_value);
+void destroyAArray(augmentedArr *structure3);
 
 /* structure 4 */
 hashArr *createHArray(double **array_set, int *array_sizes);
 void destroyHArray(hashArr *structure4);
-int testStructure4(hashArr *structure4, double **array_set, int *array_sizes);
 int *searchHArray(hashArr *structure4, double lookup_value, double **array_set, int *array_sizes);
+int testStructure4(hashArr *structure4, double **array_set, int *array_sizes);
+
+/* tests */
+int testResults1(int num_iters, double **array_set, int *array_sizes);
+int testResults2(int num_iters, unionizedArr *structure2, double **array_set, int *array_sizes);
+int testResults3(int num_iters, augmentedArr *structure3, double **array_set, int *array_sizes);
 int testResults4(int num_iters, hashArr *structure4, double **array_set, int *array_sizes);
 
 int main(){
@@ -85,133 +90,29 @@ int main(){
         array_count++;
     }
 
-    /* testStructure1(array_set,array_sizes);
-    if (testResults(10000, array_set, array_sizes) == 1)
+        /* tests for Structure 1 */
+    /*if (testResults1(10000, array_set, array_sizes) == 1)
         printf("Results are accurate.\n"); */
 
     /* CREATE STRUCTURE 2 */
     //unionizedArr *structure2 = createUArray(array_set,array_sizes);
     
+        /* tests for Structure 2 */
     /*testStructure2(structure2);
     if (testResults2(1000, structure2, array_set, array_sizes) == 1)
         printf("Results are accurate.\n"); */
 
     /* CREATE STRUCTURE 3 */
-    
-    augmentedArr *structure3 = malloc(sizeof(augmentedArr) * k); // structure 3 is an array of k aurgmentedArr
-    structure3[k-1].length = array_sizes[k-1];
-    structure3[k-1].aug_arr = malloc(sizeof(double) * structure3[k-1].length);
-    structure3[k-1].ptr_arr1 = malloc(sizeof(int) * structure3[k-1].length);
-    structure3[k-1].ptr_arr2 = malloc(sizeof(int) * structure3[k-1].length);
-    for (int i = 0; i < structure3[k-1].length; i++){
-        structure3[k-1].aug_arr[i] = array_set[k-1][i];
-        structure3[k-1].ptr_arr1[i] = i;
-        structure3[k-1].ptr_arr2[i] = 0;
-    }
-    for (int i = k-2; i >= 0; i--){
-        int initial_length = array_sizes[i];
-        double *temp_arr = malloc(sizeof(double) * (structure3[i+1].length/2 + 1));
-        int temp_arr_length = 0;
-        for (int j = 0; j < structure3[i+1].length; j+= 2){
-            temp_arr[temp_arr_length] = structure3[i+1].aug_arr[j];
-            temp_arr_length++;
-        }
-        structure3[i].aug_arr = malloc(sizeof(double) * (initial_length + temp_arr_length));
-        structure3[i].length = mergeArrays(temp_arr, array_set[i], temp_arr_length, array_sizes[i], structure3[i].aug_arr);
-        free(temp_arr);
-        structure3[i].ptr_arr1 = malloc(sizeof(int) * structure3[i].length);
-        structure3[i].ptr_arr2 = malloc(sizeof(int) * structure3[i].length);
-        for (int j = 0; j < structure3[i].length; j++){
-            structure3[i].ptr_arr1[j] = binarySearch(array_set[i],array_sizes[i],structure3[i].aug_arr[j]);
-            structure3[i].ptr_arr2[j] = binarySearch(structure3[i+1].aug_arr,structure3[i+1].length,structure3[i].aug_arr[j]); // account for p2 = -1 if lookupvalue is 150
-            // if (structure3[i].ptr_arr2[j] == -1)
-            //     printf("p2 is -1\n");
-        }
-    } 
-    // for (int i = 0; i < k; i++){
-    //     printf("%f \n", structure3[i].aug_arr[structure3[i].length - 1]);
-    // }
-    
+    //augmentedArr *structure3 = createAArray(array_set,array_sizes);
 
-    double lookup_value = 0; 
-    int results_structure1[k];
-    for (int i = 0; i < k; i++){
-        results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
-    } 
-
-    int results_structure3[k];
-    int index = binarySearch(structure3[0].aug_arr,structure3[0].length,lookup_value); 
-    
-    for (int i = 0; i < (k-1); i++){
-        // printf("index: %d\n", index);
-        // printf("max of aug array %d: %f\n", i, structure3[i].aug_arr[structure3[i].length - 1]);
-        int p1, p2;
-        if(index == -1){
-            p1 = -1;
-            // results_structure3[i] = -1;
-            //index = structure3[i].length - 1;
-            index = structure3[i+1].length - 1;
-            p2 = index;
-            // printf("continue - i - %d \n %d\n, %f - %f \n ",i,index,structure3[i+1].aug_arr[index],structure3[i+1].aug_arr[index-1]);
-            // continue;
-        }
-        else{
-            p1 = structure3[i].ptr_arr1[index];
-            p2 = structure3[i].ptr_arr2[index];
-        }
-        // printf("%d\n",p1);
-        // p1 = structure3[i].ptr_arr1[index]; // added 
-        // p2 = index; //structure3[i].ptr_arr2[index];
-
-        // if(p2 == -1){
-        //     p2 = structure3[i+1].length - 1;
-        // }
-        // printf("i - %d \n %d\n, %f - %f \n ",i,p2,structure3[i+1].aug_arr[p2],structure3[i+1].aug_arr[p2-1]);
-        
-        // printf("max of next aug array %d: %f\n", (i+1), structure3[i+1].aug_arr[structure3[i+1].length - 1]);
-        
-        // if(p1 == -1 || array_set[i][p1] >= lookup_value)
-        //     results_structure3[i] = p1; // could be -1
-        // else
-        results_structure3[i] = p1;
-
-        if ( p2 == 0 || (lookup_value <= structure3[i+1].aug_arr[p2] && p2 < structure3[i+1].length && lookup_value > structure3[i+1].aug_arr[p2-1]))
-            ;
-        else if (lookup_value <= structure3[i+1].aug_arr[p2-1])
-            p2--;
-        else if (lookup_value > structure3[i+1].aug_arr[structure3[i+1].length - 1])
-            p2 = -1;
-        else{
-            //printf("i - %d \n %d\n, %f - %f \n ",i,p2,structure3[i+1].aug_arr[structure3[i+1].length - 1],structure3[i+1].aug_arr[structure3[i+1].length - 2]);
-            assert(0);
-        }
-        index = p2; 
-
-        // printf("i - %d \n %d\n, %f - %f \n ",i,p2,structure3[i+1].aug_arr[p2],structure3[i+1].aug_arr[p2-1]);
-        // if (index == -1){
-        //     printf("index = -1 for array %d\n",i);
-        // }
-        // else if (index == 0)
-        //     printf("index = 0 for array %d\n",i);
-    }
-    results_structure3[k-1] = structure3[k-1].ptr_arr1[index]; // needs fixing
-
-    for (int i = 0; i < k; i++){
-        printf("i is %d: %d - %d \n",i, results_structure1[i],results_structure3[i]);
-        //assert(results_structure1[i] == results_structure3[i]);
-    } 
-    printf("Passed all tests.\n"); 
-
-    for (int i = 0; i < k; i++){
-        free(structure3[i].ptr_arr1);
-        free(structure3[i].ptr_arr2);
-        free(structure3[i].aug_arr);
-    }
-    free(structure3); 
+        /* tests for Structure 3 */
+    /*if (testResults3(10000, structure3, array_set, array_sizes) == 1)
+        printf("Results are accurate.\n"); */
 
     /* CREATE STUCTURE 4 */
-    //hashArr *structure4 = createHArray(array_set,array_sizes);
+    // hashArr *structure4 = createHArray(array_set,array_sizes);
 
+        /* tests for Structure 4 */
     /*if (testStructure4(structure4, array_set,array_sizes) == 1)
         printf("Passed all tests.\n"); 
     if (testResults4(100, structure4, array_set, array_sizes) == 1)
@@ -222,15 +123,17 @@ int main(){
     if (line)
         free(line);
 
+    // destroyUArray(structure2);
+    // destroyAArray(structure3);
+    // destroyHArray(structure4);
+
     for (int i = 0; i < k; i++)
         free(array_set[i]);
-    
-    //destroyUArray(structure2);
-    //destroyHArray(structure4);
 
     return 0;
 }
 
+/* helper functions */
 int binarySearch(double arr[], int n, double target) // referenced https://www.geeksforgeeks.org/find-closest-number-array/
 {
     // Corner cases
@@ -270,7 +173,7 @@ int binarySearch(double arr[], int n, double target) // referenced https://www.g
     }
  
     // Only single element left after search
-    return mid; // should this be an error code?
+    return mid; 
 }
 
 int checkArr(double *array, int size){
@@ -283,32 +186,7 @@ int checkArr(double *array, int size){
     return 1;
 }
 
-/* structure 1 */
-void testStructure1(double **array_set, int *array_sizes){
-    assert(binarySearch(array_set[0],array_sizes[0],9.99999999999999939E-012) == 0);
-    assert(binarySearch(array_set[0],array_sizes[0],9.89999999999999939E-012) == 0);
-    assert(binarySearch(array_set[0],array_sizes[0],1.99999999999999939E-012) == 0); 
-    assert(binarySearch(array_set[0],array_sizes[0],0) == 0);
-    assert(binarySearch(array_set[0],array_sizes[0],30.000000000000000) == 25479);
-    assert(binarySearch(array_set[0],array_sizes[0],30.100000000000000) == 25479);
-    assert(binarySearch(array_set[0],array_sizes[0],40.000000000000000) == 25479); 
-
-    assert(binarySearch(array_set[67],array_sizes[67],9.99999999999999939E-012) == 0);
-    assert(binarySearch(array_set[67],array_sizes[67],9.89999999999999939E-012) == 0);
-    assert(binarySearch(array_set[67],array_sizes[67],1.99999999999999939E-012) == 0);
-    assert(binarySearch(array_set[67],array_sizes[67],0) == 0);
-    assert(binarySearch(array_set[67],array_sizes[67],150.00000000000000 ) == 19691);
-    assert(binarySearch(array_set[67],array_sizes[67],200) == 19691);
-    assert(binarySearch(array_set[67],array_sizes[67],300) == 19691);
-
-    assert(binarySearch(array_set[20],array_sizes[20],1.07250000000000005E-011) == 3);
-    assert(binarySearch(array_set[20],array_sizes[20],1.21974999999999999E-011) == 8);
-    assert(binarySearch(array_set[19],array_sizes[19],19.100000000000000) == 11071);
-    assert(binarySearch(array_set[19],array_sizes[19],18.00000000000001) == 11070); // doesn't work with 18.000000000000000 
-    printf("Passed all tests for Structure 1.\n");
-}
-
-int checkResults(int *results, double **array_set, int *array_sizes, double lookup_value){ // helper function for testResults functions
+int checkResults(int *results, double **array_set, int *array_sizes, double lookup_value){
     for (int i = 0; i < k; i++){
         if( ((lookup_value > array_set[i][array_sizes[i]-1]) || (lookup_value < array_set[i][0])))
             if(results[i] == -1)
@@ -331,35 +209,29 @@ int checkResults(int *results, double **array_set, int *array_sizes, double look
     return 1;
 }
 
-int testResults1(int num_iters, double **array_set, int *array_sizes){
-    srand(time(NULL));
-    for (int i = 0; i < num_iters; i++){
-        double lookup_value = ((double) rand() / RAND_MAX) * 150;
-        //printf("%f ", lookup_value);
-        int results_structure1[k];
-        for (int i = 0; i < k; i++){
-            results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
-        } 
-        if(checkResults(results_structure1, array_set, array_sizes, lookup_value) == 0)
-            return 0;
-    }
-    return 1;
-    //printf("Results are accurate.\n");
-}
+/*void testStructure1(double **array_set, int *array_sizes){
+    assert(binarySearch(array_set[0],array_sizes[0],9.99999999999999939E-012) == 0);
+    assert(binarySearch(array_set[0],array_sizes[0],9.89999999999999939E-012) == 0);
+    assert(binarySearch(array_set[0],array_sizes[0],1.99999999999999939E-012) == 0); 
+    assert(binarySearch(array_set[0],array_sizes[0],0) == 0);
+    assert(binarySearch(array_set[0],array_sizes[0],30.000000000000000) == 25479);
+    assert(binarySearch(array_set[0],array_sizes[0],30.100000000000000) == 25479);
+    assert(binarySearch(array_set[0],array_sizes[0],40.000000000000000) == 25479); 
 
-int testResults2(int num_iters, unionizedArr *structure2, double **array_set, int *array_sizes){
-    srand(time(NULL));
-    for (int i = 0; i < num_iters; i++){
-        double lookup_value = ((double) rand() / RAND_MAX) * 150;
-        int *results_structure2 = searchUArray(structure2,lookup_value);
-        for (int i = 0; i < k; i++){
-            if (checkResults(results_structure2, array_set, array_sizes, lookup_value) == 0)
-                return 0;
-        }
-        free(results_structure2);
-    }
-    return 1;
-}
+    assert(binarySearch(array_set[67],array_sizes[67],9.99999999999999939E-012) == 0);
+    assert(binarySearch(array_set[67],array_sizes[67],9.89999999999999939E-012) == 0);
+    assert(binarySearch(array_set[67],array_sizes[67],1.99999999999999939E-012) == 0);
+    assert(binarySearch(array_set[67],array_sizes[67],0) == 0);
+    assert(binarySearch(array_set[67],array_sizes[67],150.00000000000000 ) == 19691);
+    assert(binarySearch(array_set[67],array_sizes[67],200) == 19691);
+    assert(binarySearch(array_set[67],array_sizes[67],300) == 19691);
+
+    assert(binarySearch(array_set[20],array_sizes[20],1.07250000000000005E-011) == 3);
+    assert(binarySearch(array_set[20],array_sizes[20],1.21974999999999999E-011) == 8);
+    assert(binarySearch(array_set[19],array_sizes[19],19.100000000000000) == 11071);
+    assert(binarySearch(array_set[19],array_sizes[19],18.00000000000001) == 11070); // doesn't work with 18.000000000000000 
+    printf("Passed all tests for Structure 1.\n");
+} */
 
 /* structure 2 */
 int mergeArrays( double arr1[],  double arr2[], int n1, int n2,  double arr3[]){ //referenced https://www.geeksforgeeks.org/merge-k-sorted-arrays/ 
@@ -511,6 +383,81 @@ void testStructure2(unionizedArr *structure2){
     printf("Passed all tests for Structure 2.\n");
 }
 
+/* structure 3 */
+augmentedArr *createAArray(double **array_set, int *array_sizes){
+    augmentedArr *structure3 = malloc(sizeof(augmentedArr) * k); // structure 3 is an array of k aurgmentedArr
+    structure3[k-1].length = array_sizes[k-1];
+    structure3[k-1].aug_arr = malloc(sizeof(double) * structure3[k-1].length);
+    structure3[k-1].ptr_arr1 = malloc(sizeof(int) * structure3[k-1].length);
+    structure3[k-1].ptr_arr2 = malloc(sizeof(int) * structure3[k-1].length);
+    for (int i = 0; i < structure3[k-1].length; i++){
+        structure3[k-1].aug_arr[i] = array_set[k-1][i];
+        structure3[k-1].ptr_arr1[i] = i;
+        structure3[k-1].ptr_arr2[i] = 0;
+    }
+    for (int i = k-2; i >= 0; i--){
+        int initial_length = array_sizes[i];
+        double *temp_arr = malloc(sizeof(double) * (structure3[i+1].length/2 + 1));
+        int temp_arr_length = 0;
+        for (int j = 0; j < structure3[i+1].length; j+= 2){
+            temp_arr[temp_arr_length] = structure3[i+1].aug_arr[j];
+            temp_arr_length++;
+        }
+        structure3[i].aug_arr = malloc(sizeof(double) * (initial_length + temp_arr_length));
+        structure3[i].length = mergeArrays(temp_arr, array_set[i], temp_arr_length, array_sizes[i], structure3[i].aug_arr);
+        free(temp_arr);
+        structure3[i].ptr_arr1 = malloc(sizeof(int) * structure3[i].length);
+        structure3[i].ptr_arr2 = malloc(sizeof(int) * structure3[i].length);
+        for (int j = 0; j < structure3[i].length; j++){
+            structure3[i].ptr_arr1[j] = binarySearch(array_set[i],array_sizes[i],structure3[i].aug_arr[j]);
+            structure3[i].ptr_arr2[j] = binarySearch(structure3[i+1].aug_arr,structure3[i+1].length,structure3[i].aug_arr[j]); 
+        }
+    }    
+    return structure3; 
+}
+    
+int *searchAArray(augmentedArr *structure3, double lookup_value){
+    int *results_structure3 = malloc(sizeof(int) * k);
+    int index = binarySearch(structure3[0].aug_arr,structure3[0].length,lookup_value); 
+    
+    for (int i = 0; i < (k-1); i++){
+        int p1, p2;
+        if(index == -1){
+            p1 = -1;
+            index = structure3[i+1].length - 1;
+            p2 = index;
+        }
+        else{
+            p1 = structure3[i].ptr_arr1[index];
+            p2 = structure3[i].ptr_arr2[index];
+        }
+        results_structure3[i] = p1;
+
+        if ( p2 == 0 || (lookup_value <= structure3[i+1].aug_arr[p2] && p2 < structure3[i+1].length && lookup_value > structure3[i+1].aug_arr[p2-1]))
+            ;
+        else if (lookup_value <= structure3[i+1].aug_arr[p2-1])
+            p2--;
+        else if (lookup_value > structure3[i+1].aug_arr[structure3[i+1].length - 1])
+            p2 = -1;
+        else{
+            assert(0);
+        }
+        index = p2; 
+        //printf("i: %d, index: %d\n",i,index);
+    }
+    results_structure3[k-1] = structure3[k-1].ptr_arr1[index]; 
+    return results_structure3;
+}
+    
+void destroyAArray(augmentedArr *structure3){
+    for (int i = 0; i < k; i++){
+        free(structure3[i].ptr_arr1);
+        free(structure3[i].ptr_arr2);
+        free(structure3[i].aug_arr);
+    }
+    free(structure3); 
+}
+
 /* structure 4 */
 hashArr *createHArray(double **array_set, int *array_sizes){
     double global_min = array_set[0][0];
@@ -602,6 +549,51 @@ int *searchHArray(hashArr *structure4, double lookup_value, double **array_set, 
         }
     }
     return results_structure4;
+}
+
+/* tests */
+int testResults1(int num_iters, double **array_set, int *array_sizes){
+    srand(time(NULL));
+    for (int i = 0; i < num_iters; i++){
+        double lookup_value = ((double) rand() / RAND_MAX) * 150;
+        //printf("%f ", lookup_value);
+        int results_structure1[k];
+        for (int i = 0; i < k; i++){
+            results_structure1[i] = binarySearch(array_set[i],array_sizes[i],lookup_value);
+        } 
+        if(checkResults(results_structure1, array_set, array_sizes, lookup_value) == 0)
+            return 0;
+    }
+    return 1;
+    //printf("Results are accurate.\n");
+}
+
+int testResults2(int num_iters, unionizedArr *structure2, double **array_set, int *array_sizes){
+    srand(time(NULL));
+    for (int i = 0; i < num_iters; i++){
+        double lookup_value = ((double) rand() / RAND_MAX) * 150;
+        int *results_structure2 = searchUArray(structure2,lookup_value);
+        for (int i = 0; i < k; i++){
+            if (checkResults(results_structure2, array_set, array_sizes, lookup_value) == 0)
+                return 0;
+        }
+        free(results_structure2);
+    }
+    return 1;
+}
+
+int testResults3(int num_iters, augmentedArr *structure3, double **array_set, int *array_sizes){
+    srand(time(NULL));
+    for (int i = 0; i < num_iters; i++){
+        double lookup_value = ((double) rand() / RAND_MAX) * 150;
+        int *results_structure3 = searchAArray(structure3,lookup_value);
+        for (int i = 0; i < k; i++){
+            if (checkResults(results_structure3, array_set, array_sizes, lookup_value) == 0)
+                return 0;
+        }
+        free(results_structure3);
+    }
+    return 1;
 }
 
 int testResults4(int num_iters, hashArr *structure4, double **array_set, int *array_sizes){

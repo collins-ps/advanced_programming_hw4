@@ -4,8 +4,12 @@
 ## References
 I referenced Geeksforgeeks in implementing binarySort and mergeKArrays. I have included the specific links as a comment in the implementation of these two functions.
 
-## Discussion on program and performance
+## Discussion on program
 I did not observe any compilation or run-time errors. The Valgrind report is clean. 
+
+All four structures return -1 if the lookup value is not found in the array. 
+
+## Discussion on performance
 
 Number of iterations in lookup kernel: 100000
 

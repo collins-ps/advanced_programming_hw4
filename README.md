@@ -15,9 +15,9 @@ Structure 2             - avgTime: 0.0000004682   totTime: 0.046817
 
 Structure 3             - avgTime: 0.0000012404   totTime: 0.124035 
 
-Structure 4(10350 bins) - avgTime: 0.0000008628   totTime: 0.086277 
+Structure 4             - avgTime: 0.0000008628   totTime: 0.086277 
 
-I implemented the function find_optimal_bucket to determine the optimal number of buckets between 1 and x to minimize search time over y iterations. Given an x of 15000 and y of 1000, optimal number of buckets was 10350 buckets.
+I implemented the function find_optimal_bucket to determine the optimal number of buckets between 1 and x to minimize search time over y iterations. Given an x of 15000 and y of 1000, optimal number of buckets was 10350 buckets, which is what was used during performance testing. 
 
 ## Compiling and running
 `make main` and then `./main`. Finally, run `make clean`.

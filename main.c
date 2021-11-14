@@ -39,7 +39,6 @@ void createPtrArray(double *merged_arr, int merged_length, double **array_set, i
 unionizedArr *createUArray(double **array_set, int *array_sizes);
 void destroyUArray(unionizedArr *arr);
 int *searchUArray(unionizedArr *arr, double lookup_value);
-void testStructure2(unionizedArr *structure2);
 
 /* structure 3 */
 augmentedArr *createAArray(double **array_set, int *array_sizes);
@@ -99,8 +98,7 @@ int main(){
     augmentedArr *structure3 = createAArray(array_set,array_sizes);
 
     /* CREATE STUCTURE 4 */
-    // find_optimal_bucket(15000, 1000, array_set, array_sizes); // to determine optimnal number of buckets between 1 and 15000 to minimize search time; result was 10350 buckets
-    int m = 10350; 
+    int m = 10350; // based on results of find_optimal_bucket
     hashArr *structure4 = createHArray(array_set,array_sizes, m);
 
     lookup_kernel(100000, array_set, array_sizes, structure2, structure3, structure4, m);
@@ -167,7 +165,7 @@ int binarySearch(double arr[], int n, double target) // referenced https://www.g
 int checkArr(double *array, int size){
     for (int i = 0; i < size-1; i++){
         if (array[i] >= array[i+1]){
-            printf("Error - array is not correctly sorted.\n"); //. I is %d, array[i-2] is %f, array[i-1] is %Lf, array[i] is %Lf, array[i+1] is %Lf, array[i+2] is %Lf.\n", i,array[i-2],array[i-1],array[i],array[i+1],array[i+2]);
+            printf("Error - array is not correctly sorted.\n"); 
             return 0;
         }
     }
@@ -266,7 +264,7 @@ int mergeArrays( double arr1[],  double arr2[], int n1, int n2,  double arr3[]){
     return n3;
 }
 
-int mergeKArrays(double **arr, int *arr_sizes, int i, int j, double *output, int max_len)
+int mergeKArrays(double **arr, int *arr_sizes, int i, int j, double *output, int max_len) //referenced https://www.geeksforgeeks.org/merge-k-sorted-arrays/ 
 {
     //if one array is in range
     if(i==j)
@@ -314,9 +312,9 @@ unionizedArr *createUArray(double **array_set, int *array_sizes){
     for (int i = 0; i < k; i++){
         max_len += array_sizes[i];
     }
-    double *unionized_arr = malloc(sizeof(double) * max_len); // memory managed in destroyUArr
+    double *unionized_arr = malloc(sizeof(double) * max_len); 
     int merged_length = mergeKArrays(array_set,array_sizes, 0, k-1, unionized_arr, max_len);
-    int **p = malloc(sizeof(int*) *k); // memory managed in destroyUArr
+    int **p = malloc(sizeof(int*) *k); 
     createPtrArray(unionized_arr,merged_length,array_set,array_sizes,p);
     arr->merged_arr = unionized_arr;
     arr->ptr_arr = p;
@@ -339,13 +337,6 @@ int *searchUArray(unionizedArr *arr, double lookup_value){
         results[i] = arr->ptr_arr[i][index_merged_arr];
     }
     return results;
-}
-
-void testStructure2(unionizedArr *structure2){
-    assert(checkArr(structure2->merged_arr,structure2->length) == 1);
-    assert(structure2->merged_arr[structure2->length-1] == 150.00000000000000000000);
-    assert(structure2->merged_arr[0] == 9.99999999999999939E-012);
-    printf("Passed all tests for Structure 2.\n");
 }
 
 /* structure 3 */
@@ -398,8 +389,7 @@ int *searchAArray(augmentedArr *structure3, double lookup_value){
         }
         results_structure3[i] = p1;
 
-        // if ( p2 == 0 || (lookup_value <= structure3[i+1].aug_arr[p2] && p2 < structure3[i+1].length && lookup_value > structure3[i+1].aug_arr[p2-1]))
-        if ( p2 == 0 || (p2 < structure3[i+1].length && lookup_value <= structure3[i+1].aug_arr[p2] && lookup_value > structure3[i+1].aug_arr[p2-1]))
+        if ( p2 <= 0 || (p2 < structure3[i+1].length && lookup_value <= structure3[i+1].aug_arr[p2] && lookup_value > structure3[i+1].aug_arr[p2-1]))
             ;
         else if (lookup_value <= structure3[i+1].aug_arr[p2-1])
             p2--;
@@ -409,7 +399,6 @@ int *searchAArray(augmentedArr *structure3, double lookup_value){
             assert(0);
         }
         index = p2; 
-        //printf("i: %d, index: %d\n",i,index);
     }
     results_structure3[k-1] = structure3[k-1].ptr_arr1[index]; 
     return results_structure3;
@@ -452,13 +441,12 @@ hashArr *createHArray(double **array_set, int *array_sizes, int m){
             if (structure4[i].min > array_set[j][array_sizes[j] -1] ){
                 structure4[i].b1[j] = -1;
                 structure4[i].b2[j] = -1;
-                // continue;
             }
             else{
                 if (i == 0)
                     structure4[i].b1[j] = 0;
                 else
-                    structure4[i].b1[j] = structure4[i-1].b2[j] + 1; // min is inclusive, max is not
+                    structure4[i].b1[j] = structure4[i-1].b2[j] + 1;
                 int counter_max = structure4[i].b1[j];
                 while ( (counter_max < array_sizes[j]) && (array_set[j][counter_max] < structure4[i].max) )
                     counter_max++;
@@ -491,15 +479,6 @@ int testStructure4(hashArr *structure4, double **array_set, int *array_sizes, in
                 assert(array_set[j][structure4[i].b1[j]] >= structure4[i].min);
                 assert(array_set[j][structure4[i].b2[j]] < structure4[i].max);
             }
-
-            // if(structure4[i].b1[j] == (array_sizes[j]-1) || (array_set[j][structure4[i].b1[j]] > structure4[i].min))
-            //     ;
-            // else 
-            //     return 0;
-            // if( ((structure4[i].b1[j]) == (array_sizes[j]-1)) || array_set[j][structure4[i].b2[j]] <= structure4[i].max)
-            //     ;
-            // else
-            //     return 0;
         }
     }
     return 1;
@@ -682,5 +661,4 @@ void lookup_kernel(int num_iters, double **array_set, int *array_sizes, unionize
     double avgTime4 = totalTime4 / (double)(num_iters-1); 
     fprintf(datafile, "Number of iterations: %d\nStructure 1 - avgTime: %.10f   totTime: %f \nStructure 2 - avgTime: %.10f   totTime: %f \nStructure 3 - avgTime: %.10f   totTime: %f \nStructure 4 (%d bins) - avgTime: %.10f   totTime: %f \n", num_iters, avgTime1, totalTime1, avgTime2, totalTime2, avgTime3, totalTime3, m, avgTime4, totalTime4);
     fclose(datafile);
-
 }
